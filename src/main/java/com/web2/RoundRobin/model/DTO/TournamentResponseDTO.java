@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -15,14 +17,12 @@ public class TournamentResponseDTO {
 
     private String link;
 
-    private String tournamentName;
+    private String tourName;
 
     private UserResponseDTO user;
 
     private ScoreSystemDTO scoreSystem;
 
-
-
-
+    private List<RoundDTO> rounds;
 
 }

@@ -1,6 +1,5 @@
 package com.web2.RoundRobin.model.DTO;
 
-import com.web2.RoundRobin.model.Team;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,15 +9,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class MatchDTO {
+public class MatchUpdateDTO {
 
-    private Long id;
+    private Long matchId;
 
-    private String result;
+    private Long tourId;
 
-    private TeamDTO team1;
-
-    private TeamDTO team2;
-
-    // private RoundDTO round;
+    private String score;
 }

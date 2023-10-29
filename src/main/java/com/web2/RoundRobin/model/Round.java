@@ -25,6 +25,6 @@ public class Round {
     private Tournament tournament;
 
     @OneToMany(mappedBy = "round", cascade = CascadeType.ALL)
-    private List<Match> requests;
+    private List<Match> matches;
 
 }

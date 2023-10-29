@@ -11,4 +11,7 @@ public interface TournamentService {
 
     List<TournamentResponseDTO> getTournaments(Long userId);
 
+    TournamentResponseDTO getTournament(Long tourId);
+
+    TournamentResponseDTO getTournamentByLink(String uuid);
 }

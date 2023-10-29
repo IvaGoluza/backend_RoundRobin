@@ -27,7 +27,4 @@ public class ScoreSystem {
     @Column(nullable = false)
     private Integer loss;
 
-    @OneToOne(mappedBy = "scoreSystem")
-    private Tournament tournament;
-
 }

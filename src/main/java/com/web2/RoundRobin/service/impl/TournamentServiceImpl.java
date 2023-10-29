@@ -6,13 +6,17 @@ import com.web2.RoundRobin.model.DTO.TournamentResponseDTO;
 import com.web2.RoundRobin.repository.*;
 import com.web2.RoundRobin.service.TournamentService;
 import jakarta.persistence.EntityNotFoundException;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
+
+    private static final String BASE_URL = "http://localhost:3000/tournament/";
 
     private final UserRepository userRepository;
 
@@ -28,15 +32,16 @@ public class TournamentServiceImpl implements TournamentService {
 
     private final Map<Integer, int[][][]> roundRobin = new HashMap<>();
 
-
+    private final ModelMapper modelMapper;
     @Autowired
-    public TournamentServiceImpl(UserRepository userRepository, ScoreSystemRepository scoreSystemRepository, TournamentRepository tournamentRepository, TeamRepository teamRepository, MatchRepository matchRepository, RoundRepository roundRepository) {
+    public TournamentServiceImpl(UserRepository userRepository, ScoreSystemRepository scoreSystemRepository, TournamentRepository tournamentRepository, TeamRepository teamRepository, MatchRepository matchRepository, RoundRepository roundRepository, ModelMapper modelMapper) {
         this.userRepository = userRepository;
         this.scoreSystemRepository = scoreSystemRepository;
         this.tournamentRepository = tournamentRepository;
         this.teamRepository = teamRepository;
         this.matchRepository = matchRepository;
         this.roundRepository = roundRepository;
+        this.modelMapper = modelMapper;
         int[][][] data4 = {
                 {{1, 4}, {2, 3}},
                 {{2, 4}, {3, 1}},
@@ -102,12 +107,14 @@ public class TournamentServiceImpl implements TournamentService {
         User user = userRepository.findById(tournamentDTO.getUserId()).orElseThrow(() ->
                 new EntityNotFoundException("User with id " + tournamentDTO.getUserId() + " does not exist.")
         );
+        String uuid = UUID.randomUUID().toString();
         tournament.setUser(user);
         tournament.setTourName(tournamentDTO.getTourName());
+        tournament.setUUID(uuid);
+        tournament.setLink(BASE_URL + uuid);
         tournament.setScoreSystem(scoreSystem);
-        scoreSystem.setTournament(tournament);
-        scoreSystemRepository.save(scoreSystem);      //saving scores system
         tournament = tournamentRepository.save(tournament);        //saving tournament
+        scoreSystemRepository.save(scoreSystem);      //saving scores system
 
 
         // save the teams
@@ -121,36 +128,59 @@ public class TournamentServiceImpl implements TournamentService {
             teamsAr.addAll(List.of(teams.split("\n")));
         }
         key = teamsAr.size();
-        List<Long> teamsIDs = new ArrayList<>();
+        List<Team> teamsFullObjects = new ArrayList<>();
         for (String name: teamsAr) {
             Team team = new Team();
             team.setTeamName(name);
             team.setTeamScore(0);
             team.setTourId(tournament.getId());
             team = teamRepository.save(team);
-            teamsIDs.add(team.getId());
+            teamsFullObjects.add(team);
         }
 
 
+        List<Round> allRounds = new ArrayList<>();
         // save rounds and matches
         for (int[][] roundIdx : roundRobin.get(key)) {
             Round round = new Round();
             round.setTournament(tournament);
             round = roundRepository.save(round);        //saving round
+            List<Match> roundMatches = new ArrayList<>();
             for (int[] matchIdx : roundIdx) {
+                 if(matchIdx[0] == matchIdx[1]) continue;
                  Match match = new Match();
                  match.setRound(round);
-                 match.setTeam1(teamsIDs.get(matchIdx[0] - 1));
-                 match.setTeam2(teamsIDs.get(matchIdx[1] - 1));
+                 match.setTeam1(teamsFullObjects.get(matchIdx[0] - 1));
+                 match.setTeam2(teamsFullObjects.get(matchIdx[1] - 1));
                  matchRepository.save(match);           //saving match
+                 roundMatches.add(match);
             }
-
+            round.setMatches(roundMatches);
+            allRounds.add(round);
         }
-        return null;
+        tournament = tournamentRepository.getTournamentById(tournament.getId());
+        tournament.setRounds(allRounds);
+        return modelMapper.map(tournament, TournamentResponseDTO.class);
     }
 
     @Override
     public List<TournamentResponseDTO> getTournaments(Long userId) {
-        return null;
+        userRepository.findById(userId).orElseThrow(() -> {
+            throw new EntityNotFoundException("User with id: " + userId + " not found.");
+        });
+        List<Tournament> tournaments = tournamentRepository.getAllByUserId(userId);
+        return tournaments.stream().map(tournament -> modelMapper.map(tournament, TournamentResponseDTO.class)).collect(Collectors.toList());
+
+    }
+
+    @Override
+    public TournamentResponseDTO getTournament(Long tourId) {
+        Tournament tournament = tournamentRepository.getTournamentById(tourId);
+        return modelMapper.map(tournament, TournamentResponseDTO.class);
+    }
+
+    @Override
+    public TournamentResponseDTO getTournamentByLink(String uuid) {
+        return modelMapper.map(tournamentRepository.findByUUID(uuid).orElseThrow(), TournamentResponseDTO.class);
     }
 }

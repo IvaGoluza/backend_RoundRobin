@@ -18,11 +18,13 @@ public class Match {
     @Column
     private String result;
 
-    @Column
-    private Long team1;
+    @OneToOne
+    @JoinColumn
+    private Team team1;
 
-    @Column
-    private Long team2;
+    @OneToOne
+    @JoinColumn
+    private Team team2;
 
     @ManyToOne
     @JoinColumn(name = "round_id")
