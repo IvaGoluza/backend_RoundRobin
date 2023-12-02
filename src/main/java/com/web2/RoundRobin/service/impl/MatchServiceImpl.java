@@ -30,13 +30,29 @@ public class MatchServiceImpl implements MatchService {
     public void updateResult(MatchUpdateDTO matchUpdateDTO) {
         Match match = matchRepository.findById(matchUpdateDTO.getMatchId()).orElseThrow(
                 () -> new EntityNotFoundException("Match with id " + matchUpdateDTO.getMatchId() + " does not exist."));
+        String oldResult = match.getResult();
         match.setResult(matchUpdateDTO.getScore());
         int team1score = Integer.parseInt(matchUpdateDTO.getScore().split(":")[0]);
         int team2score = Integer.parseInt(matchUpdateDTO.getScore().split(":")[1]);
         ScoreSystem scoreSystem = tournamentRepository.getTournamentById(matchUpdateDTO.getTourId()).getScoreSystem();
         Team team1 = match.getTeam1();
         Team team2 = match.getTeam2();
-        if (team1score > team2score) {
+        if (oldResult != null) {
+            int team1scoreOld = Integer.parseInt(oldResult.split(":")[0]);
+            int team2scoreOld = Integer.parseInt(oldResult.split(":")[1]);
+
+            if (team1scoreOld > team2scoreOld) {        // delete current points from this game
+                team1.setTeamScore(team1.getTeamScore() - scoreSystem.getWin());
+                team2.setTeamScore(team2.getTeamScore() - scoreSystem.getLoss());
+            } else if (team1scoreOld < team2scoreOld) {
+                team1.setTeamScore(team1.getTeamScore() - scoreSystem.getLoss());
+                team2.setTeamScore(team2.getTeamScore() - scoreSystem.getWin());
+            } else {
+                team1.setTeamScore(team1.getTeamScore() - scoreSystem.getTie());
+                team2.setTeamScore(team2.getTeamScore() - scoreSystem.getTie());
+            }
+        }
+        if (team1score > team2score) {             // add new points
             team1.setTeamScore(team1.getTeamScore() + scoreSystem.getWin());
             team2.setTeamScore(team2.getTeamScore() + scoreSystem.getLoss());
         } else if (team1score < team2score) {
