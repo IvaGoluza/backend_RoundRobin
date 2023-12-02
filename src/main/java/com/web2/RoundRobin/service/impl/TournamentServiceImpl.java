@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 public class TournamentServiceImpl implements TournamentService {
 
-    private static final String BASE_URL = "http://localhost:3000/tournament/";
+    private static final String BASE_URL = "https://frontend-roundrobin.vercel.app/tournament/";
 
     private final UserRepository userRepository;
 
