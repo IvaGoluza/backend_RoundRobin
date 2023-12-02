@@ -10,18 +10,15 @@ server:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: dominikella
-    url: jdbc:postgresql://localhost:5432/roundRobin
-  liquibase:
-    change-log: db/db.changelog-master.xml
-    default-schema: public
-    liquibase-schema: public
-  jpa:
-    database: POSTGRESQL
-    show-sql: true
-    hibernate:
-      ddl-auto: create-drop
-    properties:
+    username: roundrobin_user
+    password: C1qMXX6Mop1Yx514ItG63C2LdZ3Xj9Ka
+    url: jdbc:postgresql://dpg-ckvdpsub0mos73912ih0-a.frankfurt-postgres.render.com:5432/roundrobin
+    liquibase:
+      change-log: db/db.changelog-master.xml
+      default-schema: public
+      liquibase-schema: public
+    jpa:
+      show-sql: true
       hibernate:
-        default_schema: public
+        ddl-auto: update
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
